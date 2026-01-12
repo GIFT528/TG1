@@ -6,67 +6,18 @@
   <title>Contact via Telegram</title>
   <meta name="description" content="Quickly open Telegram to contact us." />
   <style>
-    :root{
-      --brand:#0088cc;
-      --brand-dark:#006f9a;
-      --bg:#f6fbff;
-      --text:#0f1724;
-      --muted:#6b7280;
-      --radius:12px;
-      --max-width:420px; /* mobile-first */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background:var(--bg);
-      color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:16px;
-      min-height:100vh;
-    }
-    .card{
-      width:100%;
-      max-width:var(--max-width);
-      background:#fff;
-      border-radius:16px;
-      padding:20px;
-      box-shadow:0 12px 40px rgba(2,6,23,0.08);
-      text-align:center;
-    }
-    /* Circular Telegram badge */
-    .logo{
-      width:84px;
-      height:84px;
-      border-radius:50%;
-      background:linear-gradient(180deg,var(--brand),var(--brand-dark));
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      color:#fff;
-      font-weight:800;
-      font-size:22px;
-      margin:0 auto 12px;
-      box-shadow:0 6px 18px rgba(3,102,214,0.12);
-    }
+    :root{--brand:#0088cc;--brand-dark:#006f9a;--bg:#f6fbff;--text:#0f1724;--muted:#6b7280;--max-width:420px}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;padding:16px;min-height:100vh}
+    .card{width:100%;max-width:var(--max-width);background:#fff;border-radius:16px;padding:20px;box-shadow:0 12px 40px rgba(2,6,23,0.08);text-align:center}
+    .logo{width:84px;height:84px;border-radius:50%;background:linear-gradient(180deg,var(--brand),var(--brand-dark));display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;margin:0 auto 12px;box-shadow:0 6px 18px rgba(3,102,214,0.12)}
     h1{margin:.25rem 0 0;font-size:1.15rem}
     p.lead{margin:.5rem 0 1.1rem;color:var(--muted);font-size:0.96rem}
-    .btn{
-      display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.25rem;border-radius:12px;
-      text-decoration:none;color:#fff;background:linear-gradient(180deg,var(--brand),var(--brand-dark));
-      border:0;font-weight:700;cursor:pointer;
-      box-shadow:0 10px 26px rgba(3,102,214,0.10);font-size:1rem;width:100%;justify-content:center;
-    }
+    .btn{display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.25rem;border-radius:12px;text-decoration:none;color:#fff;background:linear-gradient(180deg,var(--brand),var(--brand-dark));border:0;font-weight:700;cursor:pointer;box-shadow:0 10px 26px rgba(3,102,214,0.10);font-size:1rem;width:100%;justify-content:center}
     .btn:active{transform:translateY(1px)}
-    .small{margin-top:12px;color:var(--muted);font-size:.90rem}
-    @media (min-width:560px){
-      .card{padding:28px}
-      .btn{max-width:320px;margin:0 auto}
-    }
-    .tg-icon{width:20px;height:20px;display:inline-block;vertical-align:middle}
+    .links{margin-top:12px;color:var(--muted);font-size:0.9rem}
+    .hidden{display:none}
+    .notice{margin-top:12px;color:#b45309;background:#fff7ed;padding:.6rem;border-radius:8px;font-size:0.9rem}
   </style>
 </head>
 <body>
@@ -75,58 +26,60 @@
     <h1 id="page-title">Contact Us on Telegram</h1>
     <p class="lead">Tap the button below to open Telegram.</p>
 
-    <!-- Anchor uses the provided t.me link; click handler attempts native app first -->
-    <a id="open-app" class="btn" href="https://t.me/AMgiftso" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram link">
-      <svg class="tg-icon" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path fill="#00A7E1" d="M120 0c66.274 0 120 53.726 120 120s-53.726 120-120 120S0 186.274 0 120 53.726 0 120 0z"/>
-        <path fill="#fff" d="M50 120l140-45-40 145-22-60z"/>
-      </svg>
-      Open in Telegram
-    </a>
+    <button id="open-btn" class="btn" aria-label="Open in Telegram">Open in Telegram</button>
+
+    <!-- always-visible explicit web fallback -->
+    <div class="links">
+      Or open the web version: <a id="web-link" href="https://t.me/AMgiftso" target="_blank" rel="noopener noreferrer">t.me/AMgiftso</a>
+    </div>
+
+    <!-- shown when we detect in-app browser that may block deep links -->
+    <div id="inapp-notice" class="notice hidden">
+      Your browser may block opening apps. Please open this page in your phone's Safari or Chrome (tap the three dots / menu → Open in Browser).
+    </div>
   </main>
 
   <script>
-    // Hard-coded Telegram t.me link as requested
-    const WEB_URL = 'https://t.me/AMgiftso';
-    const USERNAME = 'AMgiftso';
-
-    // Attach click handler to try to open native Telegram app first, fallback to web t.me
     (function(){
-      const el = document.getElementById('open-app');
-      el.addEventListener('click', function(evt){
-        // Prevent default immediate navigation so we can try protocol/intent
-        evt.preventDefault();
+      const USER = 'AMgiftso';
+      const WEB = 'https://t.me/' + USER;
+      const BTN = document.getElementById('open-btn');
+      const INAPP = document.getElementById('inapp-notice');
 
-        const ua = navigator.userAgent || '';
-        const isAndroid = /Android/i.test(ua);
-        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+      // Common in-app browser userAgent hints
+      const ua = navigator.userAgent || '';
+      const isInApp = /FBAN|FBAV|Instagram|Line|WhatsApp|MicroMessenger|TikTok|douyin|Weibo|Mobile.*Safari.*(wv|Version\/)/i.test(ua);
 
-        if(isAndroid){
-          // Android intent usually triggers native app
-          const intentUrl = 'intent://t.me/' + USERNAME + '#Intent;package=org.telegram.messenger;scheme=tg;end';
-          window.location.href = intentUrl;
-          // Fallback to web after short delay
-          setTimeout(function(){
-            window.open(WEB_URL, '_blank', 'noopener');
-          }, 1200);
+      // Show notice if likely in-app browser
+      if(isInApp){
+        INAPP.classList.remove('hidden');
+      }
+
+      BTN.addEventListener('click', function(e){
+        // user gesture present
+        // Android: use intent URL (best chance)
+        if(/Android/i.test(ua)){
+          const intent = 'intent://t.me/' + USER + '#Intent;package=org.telegram.messenger;scheme=tg;end';
+          // Navigate to intent (some browsers open app)
+          window.location.href = intent;
+          // fallback to web after short delay
+          setTimeout(function(){ window.location.href = WEB; }, 1200);
           return;
         }
 
-        // For iOS and others: try tg:// scheme using iframe, then fallback
-        const appUrl = 'tg://resolve?domain=' + USERNAME;
-        const start = Date.now();
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = appUrl;
-        document.body.appendChild(iframe);
+        // iOS & others: try direct location to tg:// scheme first
+        if(/iPhone|iPad|iPod/i.test(ua)){
+          const appUrl = 'tg://resolve?domain=' + USER;
+          // Try opening the app by assigning location (user gesture)
+          window.location = appUrl;
+          // If app doesn't open, fallback to web after timeout
+          setTimeout(function(){ window.location = WEB; }, 1200);
+          return;
+        }
 
-        setTimeout(function(){
-          try { document.body.removeChild(iframe); } catch(e){}
-          if(Date.now() - start < 1500){
-            window.open(WEB_URL, '_blank', 'noopener');
-          }
-        }, 1200);
-      }, { passive: false });
+        // Desktop / unknown: just open web link in new tab
+        window.open(WEB, '_blank', 'noopener');
+      }, {passive:false});
     })();
   </script>
 </body>
